@@ -1,12 +1,10 @@
-import win32api as wapi, win32con
-import time, asyncio
-# from pynput.keyboard import Key, Controller
-import keyboard
-# keyList = ["\b"]
-# for char in "ABCDEFGHIJKLMNOPQRSTUVWXYZ 123456789,.'APS$/\\":
-#     keyList.append(char)
+# Folders info
+raw_data_folder = 'raw_data'
 
-#Giant dictonary to hold key name and VK value
+# Keys info/configs
+keys_to_check = ['q', 'w', 's', 'a', 'd', 'left_arrow', 'up_arrow', 'right_arrow', 'down_arrow']
+key_short_forms = {'q':'q', 'w':'w', 's':'s', 'a':'a', 'd':'d', 'left_arrow':'la', 'up_arrow':'ua', 'right_arrow':'ra', 'down_arrow':'da'}
+#Keys and VK value mappings
 VK_CODE = {'backspace':0x08,
            'tab':0x09,
            'clear':0x0C,
@@ -153,56 +151,3 @@ VK_CODE = {'backspace':0x08,
            ']':0xDD,
            "'":0xDE,
            '`':0xC0}
-
-
-def key_check():
-    # keys = []
-    # for key in keyList:
-    #     if wapi.GetAsyncKeyState(ord(key)):
-    #         keys.append(key)
-
-    keys = []
-    for key in VK_CODE:
-        if wapi.GetAsyncKeyState(VK_CODE[key]):
-            keys.append(key)
-
-    return keys
-
-def pressAndHold(*args):
-    '''
-    press and hold. Do NOT release.
-    accepts as many arguments as you want.
-    e.g. pressAndHold('left_arrow', 'a','b').
-    '''
-    while True:
-        for i in args:
-            wapi.keybd_event(VK_CODE[i], 0,win32con.KEYEVENTF_EXTENDEDKEY,0)
-            time.sleep(0.05)
-
-
-def release(*args):
-    '''
-    release depressed keys
-    accepts as many arguments as you want.
-    e.g. release('left_arrow', 'a','b').
-    '''
-    for i in args:
-           wapi.keybd_event(VK_CODE[i],0 ,win32con.KEYEVENTF_KEYUP ,0)
-
-# keyboard = Controller()
-
-while True:
-    keys = key_check()
-    if 's' in keys and 'p' in keys:
-        print('-------------STOPPING PROGRAM------------')
-        keyboard.release('q')
-        break
-    elif 'a' in keys and 'i' in keys:
-        print('Initializing...')
-        time.sleep(1)
-        print('-------------STARTING PROGRAM------------')
-        keyboard.send('q', do_press=True, do_release=False)
-        # if keys:
-        #     print(keys)
-
-    time.sleep(0.1)
