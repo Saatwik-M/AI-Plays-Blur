@@ -20,12 +20,13 @@ all_screens = {}
 collect_data = False
 saved_data = True
 file_name = ''
+keys = key_check(['c', 'e', 's', 'p', 'y', 'i'], VK_CODE, 'list')
 
 # Main program loop
 try:
     while True:
         # Keys needed to start the program
-        keys = key_check(['c', 'e', 's', 'p'], VK_CODE, 'list')
+        keys = key_check(['c', 'e', 's', 'p', 'y', 'i'], VK_CODE, 'list')
 
         # 'c' and 'p' to start collecting the data
         if 'c' in keys and 'p' in keys:
@@ -52,6 +53,7 @@ try:
                     if int(screen.split('.')[0]) >= min(time_stamps) + 1000 and int(screen.split('.')[0]) <= max(time_stamps) - 5000:
                         selected_screens[screen] = all_screens[screen]
                 all_screens = selected_screens
+                del selected_screens
 
                 # Calculate the amount of data collected till now and average time gap between screenshots
                 time_gaps = []
@@ -91,6 +93,11 @@ try:
                 pass
             print('\n\n----- Ending the program -----')
             break
+
+        # To end without saving files (secret, shhh!)
+        elif 'y' in keys and 'i' in keys and 'p' in keys:
+            break
+
 
         # If the program is collecting data...
         if collect_data:

@@ -1,6 +1,8 @@
-import pandas as pd, win32api as wapi, time, os, sys
-from datetime import datetime
+import pandas as pd, numpy as np
+import cv2, win32api as wapi
 from PIL import ImageGrab
+from datetime import datetime
+import time, os, sys
 from config import *
 
 
@@ -113,6 +115,12 @@ def save_data(screens, key_strokes, folder):
     data.to_csv(os.path.join(folder, 'keyStrokesRaw.csv'), index=False)
     print('Saved Keystrokes')
     for i, file_name in enumerate(screens):
-        print_progress(i+1, len(screens), bins=50, before_msg='Saving Images')
+        if i%10==0:
+            t_start = datetime.now()
         filepath = os.path.join(folder, 'screenshots', file_name)
-        screens[file_name].save(filepath, 'PNG')
+        # screens[file_name].save(filepath, 'PNG')
+        cv2.imwrite(filepath, np.array(screens[file_name])[:,:,::-1])
+        if i%10==0:
+            t_diff = datetime.now() - t_start
+            t_est = datetime.now() + ((len(screens) - i) * t_diff)
+        print_progress(i+1, len(screens), bins=20, before_msg='Saving Images: ', after_msg=f'  Est. finish time: {t_est.strftime("%I:%M %p")}')
