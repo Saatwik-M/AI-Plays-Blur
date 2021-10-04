@@ -119,8 +119,13 @@ def save_data(screens, key_strokes, folder):
         if i%10==0:
             t_start = datetime.now()
         filepath = os.path.join(folder, 'screenshots', file_name)
-        screens[file_name].save(filepath, 'PNG')
-    
+        # screens[file_name].save(filepath, 'PNG')
+        cv2.imwrite(filepath, np.array(screens[file_name])[:,:,::-1])
+        if i%10==0:
+            t_diff = datetime.now() - t_start
+            t_est = datetime.now() + ((len(screens) - i) * t_diff)
+        print_progress(i+1, len(screens), bins=20, before_msg='Saving Images: ', after_msg=f'  Est. finish time: {t_est.strftime("%I:%M %p")}')
+
 def split_img(img):
     rear = img[80:215, 530:1397]
     power = img[850:1015, 650:1250]
@@ -154,9 +159,3 @@ def get_key_pressed(im_time, time_window, key_pd, criteria='max'):
     else:
         mode = keys.mode(axis=0, numeric_only=True, dropna=True)
         return list(map(lambda x: int(x), mode.iloc[0].values))[:-1]
-        # screens[file_name].save(filepath, 'PNG')
-        cv2.imwrite(filepath, np.array(screens[file_name])[:,:,::-1])
-        if i%10==0:
-            t_diff = datetime.now() - t_start
-            t_est = datetime.now() + ((len(screens) - i) * t_diff)
-        print_progress(i+1, len(screens), bins=20, before_msg='Saving Images: ', after_msg=f'  Est. finish time: {t_est.strftime("%I:%M %p")}')
