@@ -1,6 +1,7 @@
 import pandas as pd, win32api as wapi, time, os, sys
 from datetime import datetime
 from PIL import ImageGrab
+from imgaug import augmenters as iaa
 from config import *
 
 
@@ -116,3 +117,37 @@ def save_data(screens, key_strokes, folder):
         print_progress(i+1, len(screens), bins=50, before_msg='Saving Images')
         filepath = os.path.join(folder, 'screenshots', file_name)
         screens[file_name].save(filepath, 'PNG')
+    
+def split_img(img):
+    rear = img[80:215, 530:1397]
+    power = img[850:1015, 650:1250]
+    front = img[480:586, 500:1450]
+    maps = img[80:260, 1600:1700]
+    return (rear, front, power, maps)
+
+def aug_combo(img):
+    sometimes = lambda aug: iaa.Sometimes(0.5, aug)
+    combo = iaa.SomeOf((0,9),
+                   [iaa.Add((-10, 10), per_channel=0.5),
+                    iaa.LinearContrast((0.5, 2.0), per_channel=0.5),
+                    sometimes(iaa.ElasticTransformation(alpha=(0.5, 3.5), sigma=0.25)),
+                    sometimes(iaa.PiecewiseAffine(scale=(0.01, 0.05))),
+                    iaa.Grayscale(alpha=(0.0, 1.0)),
+                    iaa.AdditiveGaussianNoise(loc=0, scale=(0.0, 0.05*255), per_channel=0.5),
+                    iaa.Affine(shear=(0,15)),
+                    iaa.Invert(0.3, per_channel=True),
+                    iaa.OneOf([iaa.GaussianBlur((0, 3.0)),
+                               iaa.AverageBlur(k=(2, 7)),
+                               iaa.MedianBlur(k=(3, 11)),
+                               iaa.MotionBlur(k=5)]),
+
+                    iaa.Multiply((0.5, 1.5), per_channel=0.5)], random_order=True)
+    return (combo.augment_image(img))
+
+def get_key_pressed(im_time, time_window, key_pd, criteria='max'):
+    keys = key_pd[(key_pd['time']>= im_time) & (key_pd['time'] <= im_time + time_window)]
+    if criteria =='max':
+        return (list(keys.max())[:-1])
+    else:
+        mode = keys.mode(axis=0, numeric_only=True, dropna=True)
+        return list(map(lambda x: int(x), mode.iloc[0].values))[:-1]
