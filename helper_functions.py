@@ -126,11 +126,25 @@ def save_data(screens, key_strokes, folder):
             t_est = datetime.now() + ((len(screens) - i) * t_diff)
         print_progress(i+1, len(screens), bins=20, before_msg='Saving Images: ', after_msg=f'  Est. finish time: {t_est.strftime("%I:%M %p")}')
 
-def split_img(img):
-    rear = img[80:215, 530:1397]
-    power = img[850:1015, 650:1250]
-    front = img[480:586, 500:1450]
-    maps = img[80:260, 1600:1700]
+def split_image(image):
+    """
+    Splits images to 4 images .
+
+    Parameters
+    ----------
+        image : ndarray
+            image to split
+        spectrum : str
+            screenshots to save
+
+    Returns
+    -------
+        None
+    """
+    rear = image[80:215, 530:1397]
+    power = image[850:1015, 650:1250]
+    front = image[480:586, 500:1450]
+    maps = image[80:260, 1600:1700]
     return (rear, front, power, maps)
 
 def aug_combo(img):
