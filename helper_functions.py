@@ -148,12 +148,16 @@ def split_image(image):
     return (rear, front, power, maps)
 
 def aug_combo(img):
+    """ 
+    Apply random augmentations to the image
+    img: ndarray
+    """
     sometimes = lambda aug: iaa.Sometimes(0.5, aug)
-    combo = iaa.SomeOf((0,9),
+    combo = iaa.SomeOf((0,5),
                    [iaa.Add((-10, 10), per_channel=0.5),
                     iaa.LinearContrast((0.5, 2.0), per_channel=0.5),
-                    sometimes(iaa.ElasticTransformation(alpha=(0.5, 3.5), sigma=0.25)),
-                    sometimes(iaa.PiecewiseAffine(scale=(0.01, 0.05))),
+                    sometimes(iaa.ElasticTransformation(alpha=(30, 70), sigma=20)),
+                    sometimes(iaa.PiecewiseAffine(scale=(0.03, 0.05))),
                     iaa.Grayscale(alpha=(0.0, 1.0)),
                     iaa.AdditiveGaussianNoise(loc=0, scale=(0.0, 0.05*255), per_channel=0.5),
                     iaa.Affine(shear=(0,15)),
@@ -167,9 +171,85 @@ def aug_combo(img):
     return (combo.augment_image(img))
 
 def get_key_pressed(im_time, time_window, key_pd, criteria='max'):
+    """
+    Gets the keys pressed for a particular image for a specific period of time
+
+    parameters
+    ----------
+    im_time: timestamp of the image
+    time_window: time interval for getting key strocks
+    key_pd: DataFrame of keys csv file
+    criteria: 'max' --> to take maximum values of all columns of key dataframe for the time interval
+              else --> it takes majority value of all columns of the key dataframe for the time interval
+    
+    Returns
+    -------
+    list
+    """
     keys = key_pd[(key_pd['time']>= im_time) & (key_pd['time'] <= im_time + time_window)]
     if criteria =='max':
         return (list(keys.max())[:-1])
     else:
         mode = keys.mode(axis=0, numeric_only=True, dropna=True)
         return list(map(lambda x: int(x), mode.iloc[0].values))[:-1]
+
+def combine_keypresses(folder, time_window, criteria='max'):
+    """
+    It combines key presses for all images and store it in a csv file
+    Parameters
+    ----------
+    time_window: time interval for getting key strocks
+    criteria: 'max' --> to take maximum values of all columns of key dataframe for the time interval
+              else --> it takes majority value of all columns of the key dataframe for the time interval
+    folder: the main directory
+    """
+    key_list = []
+    img_list = sorted(list(map(lambda x: int(x.split('.')[0]), os.listdir(os.path.join(folder,"screenshots")))))
+    key_pd = pd.read_csv(os.path.join(folder, 'keyStrokesRaw.csv'))
+    for time in img_list:
+        key_list.append(get_key_pressed(time, time_window, key_pd, criteria) + [time])
+    cmd_keypd = pd.DataFrame(key_list, columns=key_pd.columns)
+    cmd_keypd.to_csv(os.path.join(folder,"combinedKeyStrokes.csv"))
+
+def image_resize(folder, normal=True, split=False, aug=False):
+    """
+    The function resizes the image and/or split the image with/without augmentations based on the options
+    Parameters
+    ----------
+    normal: True --> resizes the original image
+    split: True --> splits the image into 4 parts and resizes
+    aug: True --> apply various augmentations to the image
+    It stores the updated image in separate direcory
+
+    Returns
+    -------
+    None
+    """
+    resize_dict = {'normal':(299, 299), 'im_fv':(200,66), 'im_rv':(100,24), 'im_pv':(100,24), 'im_mv':(48,48)}
+    if normal:
+        if not os.path.isdir(os.path.join(folder, 'resized_img')):
+            os.mkdir(os.path.join(folder, 'resized_img'))
+    if split:
+        if not os.path.isdir(os.path.join(folder, 'split_img')):
+            os.mkdir(os.path.join(folder, 'split_img'))
+    screenshot_dir = os.path.join(folder,"screenshots")
+    for files in os.listdir(screenshot_dir):
+        im = np.array(Image.open(os.path.join(screenshot_dir,files)))
+        if normal:
+            im_n = np.array(Image.fromarray(im).resize(resize_dict['normal']))
+            if aug:
+                im_n = aug_combo(im_n)
+            Image.fromarray(im_n).save(os.path.join(folder, 'resized_img',files))
+            
+        if split:
+            im_rv, im_fv, im_pv, im_mv  = split_img(im)
+            im_rv, im_fv, im_pv, im_mv = (np.array(Image.fromarray(im_rv).resize(resize_dict['im_rv'])),
+                                          np.array(Image.fromarray(im_fv).resize(resize_dict['im_fv'])),
+                                          np.array(Image.fromarray(im_pv).resize(resize_dict['im_fv'])),
+                                          np.array(Image.fromarray(im_mv).resize(resize_dict['im_fv'])))
+            if aug:
+                im_rv, im_fv, im_pv, im_mv = (aug_combo(im_rv),aug_combo(im_fv),aug_combo(im_pv),aug_combo(im_rv))
+            Image.fromarray(im_rv).save(os.path.join(folder, 'split_img', '%s_rear.png' % files.split('.')[0]))
+            Image.fromarray(im_fv).save(os.path.join(folder, 'split_img', '%s_front.png' % files.split('.')[0]))
+            Image.fromarray(im_pv).save(os.path.join(folder, 'split_img', '%s_power.png' % files.split('.')[0]))
+            Image.fromarray(im_mv).save(os.path.join(folder, 'split_img', '%s_map.png' % files.split('.')[0]))
