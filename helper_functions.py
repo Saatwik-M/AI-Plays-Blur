@@ -148,26 +148,24 @@ def split_image(image):
     return (rear, front, power, maps)
 
 def aug_combo(img):
-    """ 
+    """
     Apply random augmentations to the image
     img: ndarray
     """
     sometimes = lambda aug: iaa.Sometimes(0.5, aug)
     combo = iaa.SomeOf((0,5),
-                   [iaa.Add((-10, 10), per_channel=0.5),
+                   [iaa.Add((-15, 15), per_channel=0.5),
                     iaa.LinearContrast((0.5, 2.0), per_channel=0.5),
-                    sometimes(iaa.ElasticTransformation(alpha=(30, 70), sigma=20)),
-                    sometimes(iaa.PiecewiseAffine(scale=(0.03, 0.05))),
-                    iaa.Grayscale(alpha=(0.0, 1.0)),
+                    sometimes(iaa.ElasticTransformation(alpha=(0, img.shape[0]//5), sigma=img.shape[0]//50)),
+                    sometimes(iaa.PiecewiseAffine(scale=(0.01, 0.02))),
+                    iaa.Grayscale(alpha=(0.0, 0.3)),
                     iaa.AdditiveGaussianNoise(loc=0, scale=(0.0, 0.05*255), per_channel=0.5),
-                    iaa.Affine(shear=(0,15)),
-                    iaa.Invert(0.3, per_channel=True),
-                    iaa.OneOf([iaa.GaussianBlur((0, 3.0)),
+                    iaa.Affine(shear=(0,10)),
+                    iaa.OneOf([iaa.GaussianBlur((0, 3)),
                                iaa.AverageBlur(k=(2, 7)),
                                iaa.MedianBlur(k=(3, 11)),
-                               iaa.MotionBlur(k=5)]),
-
-                    iaa.Multiply((0.5, 1.5), per_channel=0.5)], random_order=True)
+                               iaa.MotionBlur(k=(5,10))]),
+                    iaa.Multiply((0.8, 1.2), per_channel=0.5)], random_order=True)
     return (combo.augment_image(img))
 
 def get_key_pressed(im_time, time_window, key_pd, criteria='max'):
@@ -181,7 +179,7 @@ def get_key_pressed(im_time, time_window, key_pd, criteria='max'):
     key_pd: DataFrame of keys csv file
     criteria: 'max' --> to take maximum values of all columns of key dataframe for the time interval
               else --> it takes majority value of all columns of the key dataframe for the time interval
-    
+
     Returns
     -------
     list
@@ -240,7 +238,7 @@ def image_resize(folder, normal=True, split=False, aug=False):
             if aug:
                 im_n = aug_combo(im_n)
             Image.fromarray(im_n).save(os.path.join(folder, 'resized_img',files))
-            
+
         if split:
             im_rv, im_fv, im_pv, im_mv  = split_img(im)
             im_rv, im_fv, im_pv, im_mv = (np.array(Image.fromarray(im_rv).resize(resize_dict['im_rv'])),
