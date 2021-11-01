@@ -243,8 +243,8 @@ def image_resize(folder, normal=True, split=False, aug=False):
             im_rv, im_fv, im_pv, im_mv  = split_img(im)
             im_rv, im_fv, im_pv, im_mv = (np.array(Image.fromarray(im_rv).resize(resize_dict['im_rv'])),
                                           np.array(Image.fromarray(im_fv).resize(resize_dict['im_fv'])),
-                                          np.array(Image.fromarray(im_pv).resize(resize_dict['im_fv'])),
-                                          np.array(Image.fromarray(im_mv).resize(resize_dict['im_fv'])))
+                                          np.array(Image.fromarray(im_pv).resize(resize_dict['im_pv'])),
+                                          np.array(Image.fromarray(im_mv).resize(resize_dict['im_mv'])))
             if aug:
                 im_rv, im_fv, im_pv, im_mv = (aug_combo(im_rv),aug_combo(im_fv),aug_combo(im_pv),aug_combo(im_rv))
             Image.fromarray(im_rv).save(os.path.join(folder, 'split_img', '%s_rear.png' % files.split('.')[0]))
