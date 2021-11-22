@@ -156,7 +156,7 @@ def aug_combo(img):
     combo = iaa.SomeOf((0,5),
                    [iaa.Add((-15, 15), per_channel=0.5),
                     iaa.LinearContrast((0.5, 2.0), per_channel=0.5),
-                    sometimes(iaa.ElasticTransformation(alpha=(0, img.shape[0]//5), sigma=img.shape[0]//50)),
+                    # sometimes(iaa.ElasticTransformation(alpha=(0, img.shape[0]//5), sigma=img.shape[0]//50)),
                     sometimes(iaa.PiecewiseAffine(scale=(0.01, 0.02))),
                     iaa.Grayscale(alpha=(0.0, 0.3)),
                     iaa.AdditiveGaussianNoise(loc=0, scale=(0.0, 0.05*255), per_channel=0.5),

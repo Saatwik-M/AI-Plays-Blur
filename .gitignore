@@ -2,7 +2,7 @@
 raw_data/
 
 # Test files
-test_files/
+test_files/test_save/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
